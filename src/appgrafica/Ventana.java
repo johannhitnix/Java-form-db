@@ -5,6 +5,7 @@
  */
 package appgrafica;
 import java.sql.*;
+import javax.swing.JOptionPane;
 /**
  *
  * @author ADMIN
@@ -88,7 +89,7 @@ public class Ventana extends javax.swing.JFrame {
 
         jLabel5.setText("Semestre");
 
-        label_status.setFont(new java.awt.Font("Tahoma", 1, 18)); // NOI18N
+        label_status.setFont(new java.awt.Font("Tahoma", 3, 18)); // NOI18N
 
         btn_registrar.setText("Registrar");
         btn_registrar.addActionListener(new java.awt.event.ActionListener() {
@@ -200,30 +201,102 @@ public class Ventana extends javax.swing.JFrame {
 
     private void btn_buscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_buscarActionPerformed
         // Boton Buscar
-        this.jLabel1.setText(this.campo_busqueda.getText());
+        try {
+            Connection cnx = DriverManager.getConnection("jdbc:mysql://localhost/dbestudiantes", "root", "");
+//            ojo con las diferencias entre Prepared y prepare
+            PreparedStatement pst = cnx.prepareStatement("SELECT * FROM datos WHERE id = ?"); 
+            pst.setString(1, campo_busqueda.getText().trim());
+            
+//            clase ResultSet
+            ResultSet rs = pst.executeQuery();
+            
+            if (rs.next()) {
+                txt_documento.setText(rs.getString("id"));
+                txt_nombres.setText(rs.getString("nombres"));
+                txt_carrera.setText(rs.getString("carrera"));
+                txt_semestre.setText(rs.getString("semestre"));               
+            } else{
+                JOptionPane.showMessageDialog(null, "No se encontraron registros");
+            }
+        } catch (Exception e) {            
+        }
+        
     }//GEN-LAST:event_btn_buscarActionPerformed
-
+    
+    private void clean(){
+        this.campo_busqueda.setText("");
+        this.txt_documento.setText("");
+        this.txt_nombres.setText("");
+        this.txt_carrera.setText("");
+        this.txt_semestre.setText("");
+        this.label_status.setText("");
+    }
+    
     private void btn_finActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_finActionPerformed
         System.exit(0);
     }//GEN-LAST:event_btn_finActionPerformed
 
     private void btn_limpiarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_limpiarActionPerformed
-        this.campo_busqueda.setText("");
+        clean();
     }//GEN-LAST:event_btn_limpiarActionPerformed
 
     private void btn_registrarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_registrarActionPerformed
-        try {
-            Connection cnx = DriverManager.getConnection(url);
+        try {            
+//            parametros: ruta y nombre de la db, usuario, password
+            Connection cnx = DriverManager.getConnection("jdbc:mysql://localhost/dbestudiantes", "root", "");
+//            ojo con las diferencias entre Prepared y prepare
+            PreparedStatement pst = cnx.prepareStatement("INSERT INTO datos VALUES(?,?,?,?)"); 
+            
+//            los parametros son el indice del orden de los ? y un string y comienza con 1
+//            hay que pasarle la misma cantidad de datos a la consulta asi hayan campos autoincrement
+            pst.setString(1, txt_documento.getText().trim());
+            pst.setString(2, txt_nombres.getText().trim());
+            pst.setString(3, txt_carrera.getText().trim());
+            pst.setString(4, txt_semestre.getText().trim());
+//            se ejecuta la sentencia            
+            pst.executeUpdate();
+            
+            txt_documento.setText("");
+            txt_nombres.setText("");
+            txt_carrera.setText("");
+            txt_semestre.setText("");
+            label_status.setText("REGISTRO EXITOSO.");
+            
         } catch (Exception e) {
         }
     }//GEN-LAST:event_btn_registrarActionPerformed
 
     private void btn_modificarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_modificarActionPerformed
-        // TODO add your handling code here:
+        try {
+            String ID = campo_busqueda.getText().trim();
+            Connection cnx = DriverManager.getConnection("jdbc:mysql://localhost/dbestudiantes", "root", "");
+            PreparedStatement pst = cnx.prepareStatement("UPDATE datos SET nombres = ?, SET carrera = ?, SET semestre = ? WHERE id = " + ID);
+            
+            pst.setString(1, txt_nombres.getText().trim());
+            pst.setString(2, txt_carrera.getText().trim());
+            pst.setString(3, txt_semestre.getText().trim());
+            pst.executeUpdate();
+            
+            label_status.setText("MODIFICACION EXITOSA.");
+                            
+        } catch (Exception e) {
+        }
+        
     }//GEN-LAST:event_btn_modificarActionPerformed
 
     private void btn_eliminarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btn_eliminarActionPerformed
-        // TODO add your handling code here:
+        try {
+            Connection cnx = DriverManager.getConnection("jdbc:mysql://localhost/dbestudiantes", "root", "");
+            PreparedStatement pst = cnx.prepareStatement("DELETE FROM datos WHERE id = ?");
+            
+            pst.setString(1, campo_busqueda.getText().trim());
+            pst.executeUpdate();
+            
+            clean();
+            
+            label_status.setText("ELIMINACION EXITOSA.");
+        } catch (Exception e) {
+        }
     }//GEN-LAST:event_btn_eliminarActionPerformed
 
     /**
